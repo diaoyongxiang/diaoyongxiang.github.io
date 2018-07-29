@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>B506_Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="B506_Studio">
+<meta property="og:url" content="https://diaoyongxiang.github.io/index.html">
+<meta property="og:site_name" content="B506_Studio">
+<meta property="og:locale" content="zh-CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="B506_Studio">
+  
+    <link rel="alternate" href="/atom.xml" title="B506_Studio" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">B506_Studio</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Mr.Shirley | Gray_Space</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://diaoyongxiang.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-2018-07-16-分布并行计算" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/07/28/2018-07-16-分布并行计算/" class="article-date">
+  <time datetime="2018-07-27T16:00:00.000Z" itemprop="datePublished">2018-07-28</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/分布式计算/">分布式计算</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/07/28/2018-07-16-分布并行计算/">Hadoop&amp;Spark搭建与性能比较</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="概要：本文工作主要是搭建Hadoop、Spark集群并分别运行词频统计-简单地比较二者的性能……"><a href="#概要：本文工作主要是搭建Hadoop、Spark集群并分别运行词频统计-简单地比较二者的性能……" class="headerlink" title="概要：本文工作主要是搭建Hadoop、Spark集群并分别运行词频统计,简单地比较二者的性能……"></a><strong>概要：本文工作主要是搭建Hadoop、Spark集群并分别运行词频统计,简单地比较二者的性能……</strong></h2><h1 id="1-基础环境"><a href="#1-基础环境" class="headerlink" title="1 基础环境"></a><strong>1 基础环境</strong></h1><h3 id="1-1-硬件环境"><a href="#1-1-硬件环境" class="headerlink" title="1.1 硬件环境"></a>1.1 硬件环境</h3><ul>
+<li>集群内包含3个节点：<ul>
+<li>master、node1、node2，节点之间采用公网连接，可以相互ping通</li>
+</ul>
+</li>
+<li><p>节点IP地址分布如下</p>
+<p><img src="/images/IP.png" alt="IP"></p>
+</li>
+<li>三节点虚拟机系统<ul>
+<li>VMware Station Pro 14、CentOS 7</li>
+<li>每个节点设置2G内存、磁盘空间25G</li>
+</ul>
+</li>
+</ul>
+<h2 id="1-2-网络配置"><a href="#1-2-网络配置" class="headerlink" title="1.2 网络配置"></a>1.2 网络配置</h2><ul>
+<li>本机采用VMware默认的 .NAT模式</li>
+<li>更多网络配置信息，参考文档如下：</li>
+<li><strong><a href="http://www.cnblogs.com/Matchman/p/7248902.html" target="_blank" rel="noopener">工作模式简介</a></strong></li>
+<li><strong><a href="http://www.cnblogs.com/jasmine-Jobs/p/5928218.html" target="_blank" rel="noopener">桥接模式设置</a></strong></li>
+<li><strong><a href="http://blog.csdn.net/guanhang89/article/details/54151048" target="_blank" rel="noopener">ping常见异常</a></strong></li>
+</ul>
+<h3 id="修改hostname"><a href="#修改hostname" class="headerlink" title="修改hostname"></a>修改hostname</h3><ul>
+<li>终端输入：<code>vim  /etc/hostname</code></li>
+<li><p>直接修改成：<code>master</code> 如图所示</p>
+<p><img src="/images/master.png" alt="master"></p>
+</li>
+<li><p>从节点node1和node2操作类似，只需将master修改成对应名称即可</p>
+</li>
+</ul>
+<h4 id="配置hosts文件"><a href="#配置hosts文件" class="headerlink" title="配置hosts文件"></a>配置hosts文件</h4><h4 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a><strong><a href="https://www.cnblogs.com/bramblewalls/p/5609732.html" target="_blank" rel="noopener">参考文档</a></strong></h4><h4 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h4><ul>
+<li>“/etc/hosts”文件是用来配置主机将用的DNS服务器信息，是记载LAN内连续的各主机的对应[HostName &amp; IP]之用。当用户在进行网络连接时，首先查找该文件，寻找对应的主机名（或域名）对应的IP地址。<br>一般地，测试两台机器是否连通，可以通过”ping  机器的IP”；若想用”ping  机器的主机名”时，却找不到该名称的机器，对应的策略就是修改”/etc/hostname”文件，将LAN内的各主机的IP地址和HostName的对应写入该文件即可</li>
+</ul>
+<h4 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h4><ul>
+<li>在Hadoop集群配置时，需要在”/etc/hosts”文件中添加集群中所有机器（master、node1、node2）的IP和主机名；至此，master 与所有node机器既能通过IP进行通信，也能通过主机名进行通信</li>
+</ul>
+<h4 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h4><ul>
+<li>终端输入：<code>vim  /etc/hosts</code></li>
+<li><p>添加内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.137.139  node1</span><br><span class="line">192.168.137.144  master</span><br><span class="line">192.168.137.143  node2</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>验证 <code>ping master</code></p>
+<p><img src="/images/ping_master.png" alt="ping_master"></p>
+</li>
+</ul>
+</li>
+<li><p>从节点同理</p>
+</li>
+</ul>
+<h2 id="1-3-SSH安装及其免密验证"><a href="#1-3-SSH安装及其免密验证" class="headerlink" title="1.3 SSH安装及其免密验证"></a>1.3 SSH安装及其免密验证</h2><h3 id="相关文档"><a href="#相关文档" class="headerlink" title="相关文档"></a><strong><a href="http://www.cnblogs.com/foohack/p/4103212.html" target="_blank" rel="noopener">相关文档</a></strong></h3><h3 id="说明-1"><a href="#说明-1" class="headerlink" title="说明"></a>说明</h3><ul>
+<li>Hadoop运行过程中需要管理远端Hadoop 守护进程。Hadoop启动后，NameNode是通过SSH(Secure Shell)来启动和停止各个DataNode上的各种守护进程。这就要求节点之间执行指令时，不需要输入密码，所以配置SSH运行无密码公钥认证。这样NameNode使用SSH无密码登陆并启动DataNode进程，同理，在DataNode亦能使用SSH登陆Name Node</li>
+</ul>
+<h3 id="SSH安装"><a href="#SSH安装" class="headerlink" title="SSH安装"></a>SSH安装</h3><ul>
+<li><strong><a href="http://blog.csdn.net/qq_33481635/article/details/78196470" target="_blank" rel="noopener">参考文档 Ⅰ</a></strong></li>
+<li><strong><a href="http://blog.csdn.net/trackle400/article/details/52755571" target="_blank" rel="noopener">参考文档 Ⅱ</a></strong></li>
+<li>确保CentOS 7 已安装openssh-server：<code>yum  list  installed | grep openssh-server</code></li>
+<li><p>若未安装，可终端输入：<code>yum install openssh-server</code></p>
+<p><img src="/images/open_server.png" alt="open_server"></p>
+</li>
+</ul>
+<h3 id="修改配置文件"><a href="#修改配置文件" class="headerlink" title="修改配置文件"></a>修改配置文件</h3><ul>
+<li>终端输入：<code>vim  /etc/ssh/sshd_config</code></li>
+<li>将文件中关于端口、监听地址前的 # 去除</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Port 22</span><br><span class="line"># AddressFamily any</span><br><span class="line">ListenAddress 0.0.0.0</span><br><span class="line">ListenAddress ::</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开启允许远程登陆</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># LoginGraceTime 2m</span><br><span class="line">PermitRootLogin yes</span><br><span class="line">StrictModes no</span><br><span class="line"># MaxAuthTries 6</span><br><span class="line"># MaxSessions 10</span><br></pre></td></tr></table></figure>
+<ul>
+<li>退出后重启SSH服务：<code>service sshd restart</code></li>
+</ul>
+<h3 id="配置master和node免密登陆"><a href="#配置master和node免密登陆" class="headerlink" title="配置master和node免密登陆"></a>配置master和node免密登陆</h3><h4 id="参考文档-1"><a href="#参考文档-1" class="headerlink" title="参考文档"></a><strong><a href="https://www.cnblogs.com/bramblewalls/p/5609732.html" target="_blank" rel="noopener">参考文档</a></strong></h4><h4 id="SSH无密码原理"><a href="#SSH无密码原理" class="headerlink" title="SSH无密码原理"></a>SSH无密码原理</h4><ul>
+<li>Master作为客户端，要实现无密码公钥认证，连接到node节点时，需要在master上生成一个密钥对——公钥和私钥。将公钥复制到两个node节点，当master通过SSH连接node节点时，node节点就会生成一个随机数并用master的公钥对随机数进行加密，并发送给master，master收到加密数之后再用私钥解密，并将解密数回传给node节点，node节点确认无误，便可连接</li>
+</ul>
+<h4 id="master节点配置步骤"><a href="#master节点配置步骤" class="headerlink" title="master节点配置步骤"></a>master节点配置步骤</h4><ul>
+<li>生成密钥对：<code>ssh-keygen  -t  rsa  -p  &#39;&#39;</code><ul>
+<li>注：密钥对包括 <strong>id_rsa</strong>  和  <strong>id_rsa.pub</strong>，默认密钥存放路径：<strong>root/.ssh</strong></li>
+</ul>
+</li>
+<li>将id_rsa.pub追加（&gt;&gt;）到授权的key中：<code>cat  ~/.ssh/id_rsa.pub  &gt;&gt;  ~/.ssh/authorized_keys</code></li>
+<li>修改文件”authorized_keys”权限：<code>chmod  600  ~/.ssh/authorized_keys</code><ul>
+<li><strong><a href="http://blog.csdn.net/haydenwang8287/article/details/1753883" target="_blank" rel="noopener">文件权限参考文档 Ⅰ</a></strong></li>
+<li><strong><a href="http://hpc.ipp.ac.cn/?p=1254" target="_blank" rel="noopener">文件权限参考文档 Ⅱ</a></strong></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>登陆本机，免密钥验证，master终端输入：<code>ssh master</code></p>
+<p><img src="/images/ssh_master.png" alt="ssh_master"></p>
+</li>
+<li>node节点配置过程<ul>
+<li>将master主节点上生成的公钥复制到node从节点，以node1目标路径为例，在master终端输入：<code>scp  ~/.ssh/id_rsa.pub  root@192.168.137.138:~/</code></li>
+<li>从节点终端输入：<code>cat  ~/id_rsa.pub  &gt;&gt;  ~/.ssh/authorized_keys</code></li>
+<li>用root用户修改”/etc/ssh/sshd_config”,具体过程同master节点，主要为两步：修改SSH配置文件，重启SSH服务器。至此，就可以使用下面命令进行SSH无密码登陆</li>
+<li>master终端输入：<code>ssh  node1</code></li>
+</ul>
+</li>
+<li>遇到的问题：master、node1、node2都是相同步骤配置，但是在ssh node1时，却依然需要输入密码，而master免密钥登陆node2却得以实现。解决方式是，将node1节点上关于配置ssh的目录和文件删除干净（尤其是~/.ssh文件，它是隐藏的文件夹，不易察觉），然后从头到尾重新配置即可。问题业已解决，至今未知其确切缘故。</li>
+</ul>
+<h2 id="1-4-Java安装与配置"><a href="#1-4-Java安装与配置" class="headerlink" title="1.4 Java安装与配置"></a>1.4 Java安装与配置</h2><h3 id="说明-2"><a href="#说明-2" class="headerlink" title="说明"></a>说明</h3><ul>
+<li>所有的机器都要安装JDK，先在master节点安装，然后从节点可按照步骤重复安装即可。安装JDK以及配置环境，需要以”root”的身份进行</li>
+</ul>
+<h3 id="参考文档-2"><a href="#参考文档-2" class="headerlink" title="参考文档"></a><strong><a href="https://www.jianshu.com/p/bcd3a2210177" target="_blank" rel="noopener">参考文档</a></strong></h3><h3 id="安装与配置"><a href="#安装与配置" class="headerlink" title="安装与配置"></a>安装与配置</h3><ul>
+<li>查找系统已安装的jdk组件：<code>rpm  -qa | grep  -E  &#39;^open[jre | jdk] | j[re | dk]&#39;</code></li>
+<li>卸载系统自带的jdk：<code>yum  remove  java-1.8.0-openjdk</code></li>
+<li><p>选取合适的位置，官网下载jdk</p>
+<ul>
+<li>cd  /home/diaoyongxiang/Downloads</li>
+<li><p>wget  <a href="http://download.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz?AuthParam=1516606998_9b2d8a57df63facda02a8abc47dc15e8" target="_blank" rel="noopener">http://download.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz?AuthParam=1516606998_9b2d8a57df63facda02a8abc47dc15e8</a></p>
+<p><img src="/images/java_installing.png" alt="java_installing"></p>
+<p><img src="/images/java_installed.png" alt="java_installed"></p>
+</li>
+</ul>
+</li>
+<li>解压jdk<ul>
+<li>在当前目录下，终端输入：<code>tar -zxvf  ‘下载完的jdk文件包’</code></li>
+</ul>
+</li>
+<li><p>修改环境变量：</p>
+<ul>
+<li>终端输入：<code>vim  /etc/profile</code></li>
+<li>内容添加：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export JAVA_HOME=&quot;/home/diaoyongxiang/Downloads/jdk1.8.0_152&quot;</span><br><span class="line">export PATH=&quot;$PATH:$JAVA_HOME/bin&quot;</span><br><span class="line">export JRE_HOME=&quot;$JAVA_HOME/jre&quot;</span><br><span class="line">export CLASSPATH=&quot;.:$JAVA_HOME/lib:$JRE_HOME/lib&quot;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>配置生效：<code>source  /etc/profile</code></p>
+</li>
+<li><p>安装验证：<code>java  -version</code></p>
+<p><img src="/images/java_version.png" alt="java_version"></p>
+</li>
+</ul>
+<h1 id="2-Hadoop"><a href="#2-Hadoop" class="headerlink" title="2 Hadoop"></a><strong>2 Hadoop</strong></h1><ul>
+<li>说明： 已配置ssh,jdk,hosts,防火墙关闭</li>
+<li>版本： Hadoop 2.8.3</li>
+<li><p>备注： Apache官网下载Hadoop,方法同下载jdk.不再赘述</p>
+<p><img src="/images/hadoop_installing.png" alt="hadoop_installing"></p>
+<p><img src="/images/hadoop_installed.png" alt="hadoop_installed"></p>
+</li>
+</ul>
+<h2 id="2-1-安装过程"><a href="#2-1-安装过程" class="headerlink" title="2.1 安装过程"></a>2.1 安装过程</h2><ul>
+<li>创建安装路径：<code>mkdir /home/diaoyongxiang/Downloads/hadoop</code></li>
+<li>进入上述路径，解压安装包：<code>tar  -zxvf  hadoop-2.8.3.tar.gz</code></li>
+<li>配置环境变量：<code>vim /etc/profile</code></li>
+<li><p>添加下列内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export HADOOP_HOME=/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3</span><br><span class="line">export PATH=$PATH:$HADOOP_HOME/sbin</span><br><span class="line">export PATH=$PATH:$HADOOP_HOME/bin</span><br><span class="line">export HADOOP_HOME_WARN_SUPPRESS=1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置更新生效：<code>source  /etc/profile</code></p>
+</li>
+<li><p>验证环境变量：<code>hadoop version</code></p>
+<p><img src="/images/hadoop_version.png" alt="hadoop_version"></p>
+</li>
+<li><a href="https://stackoverflow.com/questions/19363402/classpath-issue-in-hadoop-on-cygwin-while-running-hadoop-version-command" target="_blank" rel="noopener">验证失败相关文章</a></li>
+</ul>
+<h2 id="2-2-配置文件"><a href="#2-2-配置文件" class="headerlink" title="2.2 配置文件"></a>2.2 配置文件</h2><ul>
+<li><p><strong><a href="https://tianwenyu.github.io/virtualbox-haddop/" target="_blank" rel="noopener">参考文档</a></strong></p>
+</li>
+<li><p>配置hadoop-env.sh</p>
+<ul>
+<li>存放路径：/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/etc/hadoop <strong>下同</strong></li>
+<li>添加内容：<code>export  JAVA_HOME=/home/diaoyongxiang/Downloads/jdk1.8.0_152</code></li>
+</ul>
+</li>
+<li><p>配置core-site.xml</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">  &lt;property&gt;</span><br><span class="line">      &lt;name&gt;fs.default.name&lt;/name&gt;</span><br><span class="line">      &lt;value&gt;hdfs://master:9000&lt;/value&gt;</span><br><span class="line">      &lt;final&gt;true&lt;/final&gt;</span><br><span class="line">  &lt;/property&gt;</span><br><span class="line">  &lt;property&gt;</span><br><span class="line">      &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;</span><br><span class="line">      &lt;value&gt;/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/tmp&lt;/value&gt;</span><br><span class="line">      &lt;description&gt;Abase for other temporary directories.&lt;/description&gt;</span><br><span class="line">  &lt;/property&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置hdfs-site.xml</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">     &lt;property&gt;</span><br><span class="line">          &lt;name&gt;dfs.name.dir&lt;/name&gt;</span><br><span class="line">          &lt;value&gt;/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/temp/hdfs/name&lt;/value&gt;</span><br><span class="line">          &lt;final&gt;true&lt;/final&gt;</span><br><span class="line">      &lt;/property&gt;</span><br><span class="line">      &lt;property&gt;</span><br><span class="line">          &lt;name&gt;dfs.data.dir&lt;/name&gt;</span><br><span class="line">          &lt;value&gt;/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/temp/hdfs/data&lt;/value&gt;</span><br><span class="line">          &lt;final&gt;true&lt;/final&gt;</span><br><span class="line">      &lt;/property&gt;</span><br><span class="line">      &lt;property&gt;</span><br><span class="line">          &lt;name&gt;dfs.replication&lt;/name&gt;</span><br><span class="line">          &lt;value&gt;2&lt;/value&gt;</span><br><span class="line">      &lt;/property&gt;</span><br><span class="line">      &lt;property&gt;</span><br><span class="line">          &lt;name&gt;dfs.permissions&lt;/name&gt;</span><br><span class="line">          &lt;value&gt;false&lt;/value&gt;</span><br><span class="line">      &lt;/property&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置mapred-site.xml</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">  &lt;property&gt;</span><br><span class="line">      &lt;name&gt;mapreduce.framework.name&lt;/name&gt;</span><br><span class="line">      &lt;value&gt;yarn&lt;/value&gt;</span><br><span class="line">  &lt;/property&gt;</span><br><span class="line">   &lt;property&gt;</span><br><span class="line">      &lt;name&gt;mapred.job.tracker&lt;/name&gt;</span><br><span class="line">      &lt;value&gt;master:9001&lt;/value&gt;</span><br><span class="line">  &lt;/property&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="2-3-从节点Java-amp-Hadoop安装及其配置，与主节点相同，不再赘述"><a href="#2-3-从节点Java-amp-Hadoop安装及其配置，与主节点相同，不再赘述" class="headerlink" title="2.3 从节点Java &amp; Hadoop安装及其配置，与主节点相同，不再赘述"></a>2.3 从节点Java &amp; Hadoop安装及其配置，与主节点相同，不再赘述</h2><h2 id="2-4-启动Hadoop集群"><a href="#2-4-启动Hadoop集群" class="headerlink" title="2.4 启动Hadoop集群"></a>2.4 启动Hadoop集群</h2><ul>
+<li>说明：以下操作在master节点进行</li>
+<li><p>初次启动需格式化：<code>hadoop  name  -format</code></p>
+<p><img src="/images/hadoop_namenode_format.png" alt="hadoop_namenode_format"></p>
+<ul>
+<li><strong>若出现has  been  successfully  formatted 和 Exiting with status 0 ，则表示格式化成功</strong></li>
+</ul>
+</li>
+<li><p>启动集群：<code>start-all.sh</code></p>
+<p><img src="/images/hadoop_start_all.png" alt="hadoop_start_all"></p>
+</li>
+<li><p>成功启动验证：<code>jps</code></p>
+<p><img src="/images/hadoop_master_jps.png" alt="hadoop_master_jps"></p>
+</li>
+<li>从节点终端输入：<code>jps</code></li>
+<li>备注：停止集群：<code>stop-all.sh</code></li>
+<li><strong><a href="http://www.aboutyun.com/thread-7118-1-1.html" target="_blank" rel="noopener">jps常见异常相关文档</a></strong></li>
+<li><strong><a href="https://www.cnblogs.com/dream-to-pku/p/7249954.html" target="_blank" rel="noopener">为什么没有JobTracker &amp; TaskTracker</a></strong></li>
+</ul>
+<h2 id="2-5-查看Namenode状况"><a href="#2-5-查看Namenode状况" class="headerlink" title="2.5 查看Namenode状况"></a>2.5 查看Namenode状况</h2><ul>
+<li><p>可以通过web界面查看运行状况，默认为： <a href="http://master:8088" target="_blank" rel="noopener">http://master:8088</a></p>
+<p><img src="/images/hadoop_web.png" alt="hadoop_web"></p>
+</li>
+</ul>
+<h1 id="3-Hadoop集群运行程序"><a href="#3-Hadoop集群运行程序" class="headerlink" title="3 Hadoop集群运行程序"></a><strong>3 Hadoop集群运行程序</strong></h1><ul>
+<li>数据集介绍：数据集是实验室爬虫项目中爬下来的部分网页的源码，先去除除中文以外的其它字符，然后去掉停用词，比如介词等，最后结巴分词形成此次程序设计的数据集，数据集大小为158M，文件格式为.txt</li>
+<li>程序功能介绍：是python语言写的一个统计词频的程序，运行方法直接在master主机上通过运行脚本来运行，运行步骤及结果如下：</li>
+</ul>
+<h2 id="3-1-HDFS（虚拟文件系统）创建目录存放数据集"><a href="#3-1-HDFS（虚拟文件系统）创建目录存放数据集" class="headerlink" title="3.1 HDFS（虚拟文件系统）创建目录存放数据集"></a>3.1 HDFS（虚拟文件系统）创建目录存放数据集</h2><ul>
+<li>进入本地集群目录：<code>cd /home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/hdfs</code></li>
+<li>在hdfs中创建目录：<code>hdfs dfs -mkdir -p /data/input</code></li>
+<li>上传备好的数据集：<code>hdfs dfs -put /home/diaoyongxiang/Desktop/test.txt  /data/input</code></li>
+<li>数据集上传成功否：<code>hdfs dfs -ls /data/input</code></li>
+</ul>
+<h2 id="3-2-编写代码"><a href="#3-2-编写代码" class="headerlink" title="3.2 编写代码"></a>3.2 编写代码</h2><ul>
+<li>创建目录存放程序：<code>cd /home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/Program</code></li>
+<li>打开编辑器：<code>vim mapper.py</code></li>
+<li>输入以下代码：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/env python</span><br><span class="line"></span><br><span class="line">import sys</span><br><span class="line"># input comes from STDIN (standard input)</span><br><span class="line">for line in sys.stdin:</span><br><span class="line">    # remove leading and trailing whitespace</span><br><span class="line">    line = line.strip()</span><br><span class="line">    # split the line into words</span><br><span class="line">    words = line.split()</span><br><span class="line">    # increase counters</span><br><span class="line">    for word in words:</span><br><span class="line">        # write the results to STDOUT (standard output);</span><br><span class="line">        # what we output here will be the input for the</span><br><span class="line">        # Reduce step, i.e. the input for reducer.py</span><br><span class="line">        #</span><br><span class="line">        # tab-delimited; the trivial word count is 1</span><br><span class="line">        print &apos;%s\t%s&apos; % (word, 1)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>vim reducer.py</li>
+<li>输入以下代码：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/env python</span><br><span class="line">from operator import itemgetter</span><br><span class="line">import sys</span><br><span class="line">current_word = None</span><br><span class="line">current_count = 0</span><br><span class="line">word = None</span><br><span class="line"></span><br><span class="line"># input comes from STDIN</span><br><span class="line">for line in sys.stdin:</span><br><span class="line">    # remove leading and trailing whitespace</span><br><span class="line">line = line.strip()</span><br><span class="line"></span><br><span class="line">    # parse the input we got from mapper.py</span><br><span class="line">    word, count = line.split(&apos;\t&apos;, 1)</span><br><span class="line"></span><br><span class="line">    # convert count (currently a string) to int</span><br><span class="line">    try:</span><br><span class="line">        count = int(count)</span><br><span class="line">    except ValueError:</span><br><span class="line">        # count was not a number, so silently</span><br><span class="line">        # ignore/discard this line</span><br><span class="line">        continue</span><br><span class="line"></span><br><span class="line">    # this IF-switch only works because Hadoop sorts map output</span><br><span class="line">    # by key (here: word) before it is passed to the reducer</span><br><span class="line">    if current_word == word:</span><br><span class="line">        current_count += count</span><br><span class="line">    else:</span><br><span class="line">        if current_word:</span><br><span class="line">            # write result to STDOUT</span><br><span class="line">            print &apos;%s\t%s&apos; % (current_word, current_count)</span><br><span class="line">        current_count = count</span><br><span class="line">        current_word = word</span><br><span class="line"></span><br><span class="line"># do not forget to output the last word if needed!</span><br><span class="line">if current_word == word:</span><br><span class="line">    print &apos;%s\t%s&apos; % (current_word, current_count)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>创建run.sh</p>
+<ul>
+<li>说明：通过streaming接口运行的脚本太长</li>
+<li>任意位置：<code>cd  /home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3</code></li>
+<li>编写如下内容：<code>vim  run.sh</code></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">hadoop jar $STREAM \</span><br><span class="line">-file /home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/Program/mapper.py \</span><br><span class="line">-mapper /home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/Program/mapper.py \</span><br><span class="line">-file /home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/Program/reducer.py \</span><br><span class="line">-reducer /home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/Program/reducer.py \</span><br><span class="line">-input /data/input/*.txt \</span><br><span class="line">-output /data/output</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>备注：末尾”\“与文本之间必须留一个字符空隔</strong></li>
+</ul>
+</li>
+<li>终端输入：<code>source  run.sh</code></li>
+<li><p>出现信息：</p>
+<p><img src="/images/run_sh_1.png" alt="run_sh_1"></p>
+<p><img src="/images/run_sh_2.png" alt="run_sh_2"></p>
+</li>
+<li><p>查看结果：<code>hdfs dfs -cat /data/output/part-00000 | sort -nk 2 | tail -10</code><br><strong>备注：词频数量较大，只查看最后10行</strong></p>
+<p><img src="/images/hadoop_result.png" alt="hadoop_result"></p>
+</li>
+</ul>
+<h1 id="4-Spark搭建及程序运行"><a href="#4-Spark搭建及程序运行" class="headerlink" title="4 Spark搭建及程序运行"></a><strong>4 Spark搭建及程序运行</strong></h1><ul>
+<li>说明：以下操作均在master节点进行</li>
+<li>创建目录：<code>mkdir /home/diaoyongxiang/Downloads/spark</code></li>
+</ul>
+<h2 id="参考文档-3"><a href="#参考文档-3" class="headerlink" title="参考文档"></a><strong><a href="https://www.cnblogs.com/zengxiaoliang/p/6478859.html" target="_blank" rel="noopener">参考文档</a></strong></h2><h2 id="4-1-Scala下载与安装"><a href="#4-1-Scala下载与安装" class="headerlink" title="4.1 Scala下载与安装"></a>4.1 Scala下载与安装</h2><ul>
+<li>下载并解压scala安装包<ul>
+<li>wget <a href="https://downloads.lightbend.com/scala/2.11.7/scala-2.11.7.tgz" target="_blank" rel="noopener">https://downloads.lightbend.com/scala/2.11.7/scala-2.11.7.tgz</a></li>
+<li><code>tar zxvf scala-2.11.7.tgz</code></li>
+</ul>
+</li>
+<li><p>添加scala环境变量：<code>vim  /etc/proflie</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export SCALA_HOME=/home/diaoyongxiang/Downloads/spark/scala-2.11.7</span><br><span class="line">export PATH=$PATH:$SCALA_HOME/bin</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>刷新配置：<code>source  /etc/profile</code></p>
+</li>
+<li>验证环境变量：<code>scala  -version</code></li>
+</ul>
+<h2 id="4-2-Spark搭建"><a href="#4-2-Spark搭建" class="headerlink" title="4.2 Spark搭建"></a>4.2 Spark搭建</h2><ul>
+<li>下载并解压二进制包：<code>spark-2.2.1-bin-hadoop2.7.tgz</code></li>
+<li>修改配置文件：<code>vim  /etc/profile</code></li>
+<li><p>添加以下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export SPARK_HOME=/home/diaoyongxiang/Downloads/spark/spark-2.2.1-bin-hadoop2.7</span><br><span class="line">export PATH=$PATH:$SPARK_HOME/bin</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>复制spark-env.sh.template：<code>cp  spark-env.sh.template  spark-env.sh</code></p>
+<ul>
+<li>注：文件存放路径：/home/diaoyongxiang/Downloads/spark/spark-2.2.1-bin-hadoop2.7/conf</li>
+</ul>
+</li>
+<li>修改spark-env.sh：<code>vim spark-env.sh</code></li>
+<li><p>添加以下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">export  JAVA_HOME=/home/diaoyongxiang/Downloads/jdk1.8.0_152</span><br><span class="line">export  SCALA_HOME=/home/diaoyongxiang/Downloads/spark/scala-2.11.7</span><br><span class="line">export  HADOOP_HOME=/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3</span><br><span class="line">export  HADOOP_CONF_DIR=/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/etc/hadoop</span><br><span class="line">export  SPARK_MASTER_IP=192.168.137.144</span><br><span class="line">export  SPARK_MASTER_HOST=192.168.137.144</span><br><span class="line">export  SPARK_WORKER_MEMORY=2g</span><br><span class="line">export  SPARK_WORKER_CORES=2</span><br><span class="line">export  SPARK_HOME=/home/diaoyongxiang/Downloads/spark/spark-2.2.1-bin-hadoop2.7</span><br><span class="line">export  SPARK_DIST_CLASSPATH=$(/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/bin/hadoop classpath)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将spark文件（包含spark环境、scala环境）复制到从节点（以node1为例）</p>
+<ul>
+<li>终端输入：<code>scp  /home/diaoyongxiang/Downloads/spark  root@node1:/home/diaoyongxiang/Downloads/spark</code></li>
+<li>修改配置文件：（与主节点相同）</li>
+<li>修改spark-env.sh：<ul>
+<li>将export  SPARK_MASTER_IP=192.168.137.144 改为node1节点IP：192.168.137.143</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>master节点启动集群：<code>/home/diaoyongxiang/Downloads/hadoop/hadoop-2.8.3/sbin/start-all.sh</code><ul>
+<li>注：绝对路径，方能启动</li>
+</ul>
+</li>
+<li><p>成功启动与否：<code>jps</code></p>
+<p><img src="/images/spark_jps.png" alt="spark_jps"></p>
+</li>
+<li><p>web端spark信息查看：<a href="http://master:8088" target="_blank" rel="noopener">http://master:8088</a></p>
+<p><img src="/images/spark_web.png" alt="spark_web"></p>
+</li>
+</ul>
+<h2 id="4-3-Spark集群运行程序"><a href="#4-3-Spark集群运行程序" class="headerlink" title="4.3 Spark集群运行程序"></a>4.3 Spark集群运行程序</h2><ul>
+<li>数据集介绍：数据集和在Hadoop上运行的数据集相同</li>
+<li>程序功能：为了与在hadoop上的运行结果做一个比较，我们写了一个python程序来统计数据集中的词频，运行方式是在master主机上直接运行wordcount.py程序</li>
+<li>代码如下：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># -*-coding:utf-8-*-</span><br><span class="line">import logging</span><br><span class="line">from operator import add</span><br><span class="line">from pyspark import SparkContext</span><br><span class="line">logging.basicConfig(format=&apos;%(message)s&apos;, level=logging.INFO)</span><br><span class="line"></span><br><span class="line">#import local file</span><br><span class="line">test_file_name = &quot;hdfs:///data/input/test.txt&quot;</span><br><span class="line">out_file_name = &quot;hdfs:///data/output&quot;     # spark 运行后数据存放在hdfs的output中</span><br><span class="line"></span><br><span class="line">sc = SparkContext(&quot;local&quot;,&quot;wordcount app&quot;)</span><br><span class="line"></span><br><span class="line"># text_file rdd object</span><br><span class="line">text_file = sc.textFile(test_file_name)</span><br><span class="line"></span><br><span class="line"># counts</span><br><span class="line">counts = text_file.flatMap(lambda line: line.split(&quot; &quot;)).map(lambda word: (word,1)).reduceByKey(lambda a, b: a + b)</span><br><span class="line">counts.saveAsTextFile(out_file_name)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>程序运行：<code>spark-submit wordcount.py</code></li>
+<li><p>结果展示：<code>hdfs dfs -cat /data/output_spark/part-0000* | sort -nk 2 | tail -10</code></p>
+<p><img src="/images/spark_result.png" alt="spark_result"></p>
+<h1 id="5-Hadoop-amp-Spark结果分析与比较"><a href="#5-Hadoop-amp-Spark结果分析与比较" class="headerlink" title="5 Hadoop &amp; Spark结果分析与比较"></a><strong>5 Hadoop &amp; Spark结果分析与比较</strong></h1><h2 id="略……"><a href="#略……" class="headerlink" title="略……"></a><strong>略……</strong></h2></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://diaoyongxiang.github.io/2018/07/28/2018-07-16-分布并行计算/" data-id="cjk69hsjg00008k2a4yo0os4l" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/分布式计算/">分布式计算</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/07/28/2018-07-16-分布并行计算/">Hadoop&amp;Spark搭建与性能比较</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 diaoyongxiang<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
