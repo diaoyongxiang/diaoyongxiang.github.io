@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Neo4j-admin import &amp;amp; JSON_to_CSV Transformation 说明：为满足图形数据库 Neo4j 批量数据导入工具 Neo4j-admin import 的 csv 文件格式需要，须将现有 JSON 文档转换成固定格式 CSV 文档1  Neo4j-admin import 格式说明 相关博客： Neo4j官方文档 使用neo4j-import导入数据">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JSON_To_CSV Transformation">
+<meta property="og:url" content="https://diaoyongxiang.github.io/2018/07/28/Neo4j - JSON_to_CSV Format Transformation/index.html">
+<meta property="og:site_name" content="B506_Studio">
+<meta property="og:description" content="Neo4j-admin import &amp;amp; JSON_to_CSV Transformation 说明：为满足图形数据库 Neo4j 批量数据导入工具 Neo4j-admin import 的 csv 文件格式需要，须将现有 JSON 文档转换成固定格式 CSV 文档1  Neo4j-admin import 格式说明 相关博客： Neo4j官方文档 使用neo4j-import导入数据">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://diaoyongxiang.github.io/images/customers.png">
+<meta property="og:image" content="https://diaoyongxiang.github.io/images/products.png">
+<meta property="og:image" content="https://diaoyongxiang.github.io/images/ooo.png">
+<meta property="og:image" content="https://diaoyongxiang.github.io/images/orders_details.png">
+<meta property="og:image" content="https://diaoyongxiang.github.io/images/coo.png">
+<meta property="og:image" content="https://diaoyongxiang.github.io/images/person-node.png">
+<meta property="og:image" content="https://diaoyongxiang.github.io/images/relationship.png">
+<meta property="og:updated_time" content="2018-07-29T06:52:20.065Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JSON_To_CSV Transformation">
+<meta name="twitter:description" content="Neo4j-admin import &amp;amp; JSON_to_CSV Transformation 说明：为满足图形数据库 Neo4j 批量数据导入工具 Neo4j-admin import 的 csv 文件格式需要，须将现有 JSON 文档转换成固定格式 CSV 文档1  Neo4j-admin import 格式说明 相关博客： Neo4j官方文档 使用neo4j-import导入数据">
+<meta name="twitter:image" content="https://diaoyongxiang.github.io/images/customers.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://diaoyongxiang.github.io/2018/07/28/Neo4j - JSON_to_CSV Format Transformation/"/>
+
+
+
+
+
+  <title>JSON_To_CSV Transformation | B506_Studio</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">B506_Studio</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Mr.Shirley | Gray_Space</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://diaoyongxiang.github.io/2018/07/28/Neo4j - JSON_to_CSV Format Transformation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="diaoyongxiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/hm.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="B506_Studio">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JSON_To_CSV Transformation</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-07-28T00:00:00+08:00">
+                2018-07-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Knowledge-Graph-Series/" itemprop="url" rel="index">
+                    <span itemprop="name">Knowledge Graph Series</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="Neo4j-admin-import-amp-JSON-to-CSV-Transformation"><a href="#Neo4j-admin-import-amp-JSON-to-CSV-Transformation" class="headerlink" title="Neo4j-admin import &amp; JSON_to_CSV Transformation"></a><strong>Neo4j-admin import &amp; JSON_to_CSV Transformation</strong></h3><ul>
+<li><strong>说明：为满足图形数据库 Neo4j 批量数据导入工具 Neo4j-admin import 的 csv 文件格式需要，须将现有 JSON 文档转换成固定格式 CSV 文档</strong><h4 id="1-Neo4j-admin-import-格式说明"><a href="#1-Neo4j-admin-import-格式说明" class="headerlink" title="1  Neo4j-admin import 格式说明"></a>1  Neo4j-admin import 格式说明</h4></li>
+<li><strong>相关博客：</strong><ul>
+<li><strong><a href="https://neo4j.com/docs/operations-manual/current/tutorial/import-tool/" target="_blank" rel="noopener">Neo4j官方文档</a></strong></li>
+<li><strong><a href="http://weikeqin.cn/2017/04/11/neo4j-import/" target="_blank" rel="noopener">使用neo4j-import导入数据</a></strong></li>
+</ul>
+</li>
+<li><strong>参考资料：《Neo4j 权威指南》第二章 neo-import 工具</strong></li>
+<li><strong>以下是《权威指南》范例，各表格组织形式如下：</strong></li>
+<li><p>表格1 <strong><em>customers.csv</em></strong></p>
+<p><img src="/images/customers.png" alt="customers"></p>
+</li>
+<li><p>表格2 <strong><em>products.csv</em></strong></p>
+<p><img src="/images/products.png" alt="products"></p>
+</li>
+<li><p>表格3 <strong><em>order_header.csv, orders1.csv, orders2.csv</em></strong></p>
+<p><img src="/images/ooo.png" alt="ooo"></p>
+</li>
+<li><p>表格4 <strong><em>orders_details.csv</em></strong></p>
+<p><img src="/images/orders_details.png" alt="orders_details"></p>
+</li>
+<li><p>表格5 <strong><em>customer_order_header.csv, orders1.csv, orders2.csv</em></strong></p>
+<p><img src="/images/coo.png" alt="coo"></p>
+</li>
+<li><p><strong>个人理解：5张表之间的组织关系，由关键词customerId: ID(Customer); productId: ID(product); :LABEL; orderId: ID(product); :START_ID(Order); :END_ID(Product)、:END_ID(Order); :START_ID(Customer)建立</strong></p>
+</li>
+<li><strong><em>分析以上表格：定制出符合自己数据特点的 csv 格式，详细如下：</em></strong></li>
+<li><p>表格 <strong>person-node.csv</strong></p>
+<p><img src="/images/person-node.png" alt="person-node"></p>
+</li>
+<li><p>表格 <strong>relationship.csv</strong></p>
+<p><img src="/images/relationship.png" alt="relationship"></p>
+</li>
+</ul>
+<h4 id="2-JSON-To-CSV-Python3-6-代码"><a href="#2-JSON-To-CSV-Python3-6-代码" class="headerlink" title="2 JSON_To_CSV (Python3.6) 代码"></a>2 JSON_To_CSV (Python3.6) 代码</h4><ul>
+<li><strong>在 1 中，我们了解到 json2csv 的目标文件格式</strong></li>
+<li><p><strong>原文件(局部样例) res0721.json 格式如下：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;nodes&quot;: [&#123;&quot;identifier&quot;: &quot;2c655f7ecfa9801ee7873a2d514d874a8f1eba1f&quot;, &quot;key&quot;: &quot;art_thing.person&quot;, &quot;name&quot;: &quot;\u8bb8\u6c5f&quot;&#125;, &#123;&quot;identifier&quot;: &quot;12daf455786838f6211eef86419cfc7414f9c2cd&quot;, &quot;key&quot;: &quot;art_thing.person&quot;, &quot;name&quot;: &quot;\u6797\u98ce\u7720&quot;&#125;], &quot;edges&quot;: [&#123;&quot;source&quot;: &quot;bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06&quot;, &quot;target&quot;: &quot;2c655f7ecfa9801ee7873a2d514d874a8f1eba1f&quot;, &quot;label&quot;: &quot;leader&quot;&#125;, &#123;&quot;source&quot;: &quot;bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06&quot;, &quot;target&quot;: &quot;12daf455786838f6211eef86419cfc7414f9c2cd&quot;, &quot;label&quot;: &quot;alumni&quot;&#125;]&#125;</span><br><span class="line">&#123;&quot;nodes&quot;: [&#123;&quot;identifier&quot;: &quot;5f7de140cbb1447cfd0f135a30968d0884e6673b&quot;, &quot;key&quot;: &quot;art_thing.person&quot;, &quot;name&quot;: &quot;\u5f90\u60b2\u9e3f&quot;&#125;, &#123;&quot;identifier&quot;: &quot;272e6a337573137f830eeb353f3ebc83d80154a0&quot;, &quot;key&quot;: &quot;art_thing.person&quot;, &quot;name&quot;: &quot;\u674e\u82e6\u7985&quot;&#125;], &quot;edges&quot;: [&#123;&quot;source&quot;: &quot;8cd08994a3b663e4e1bfd8b287fe84b1e9cb2f41&quot;, &quot;target&quot;: &quot;5f7de140cbb1447cfd0f135a30968d0884e6673b&quot;, &quot;label&quot;: &quot;alumni&quot;&#125;, &#123;&quot;source&quot;: &quot;8cd08994a3b663e4e1bfd8b287fe84b1e9cb2f41&quot;, &quot;target&quot;: &quot;a3ab9a27970bfd0286bbaf890b71c91d259c7e50&quot;, &quot;label&quot;: &quot;alumni&quot;&#125;]&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>格式格式转换代码：<strong>json2csv.py</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">import json</span><br><span class="line">import csv</span><br><span class="line">import codecs</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def json2csv(path):</span><br><span class="line">    nodes_csvfile = open(&quot;person_node.csv&quot;, &quot;w&quot;, newline=&apos;&apos;, encoding=&quot;utf-8&quot;)</span><br><span class="line">    writer = csv.writer(nodes_csvfile, delimiter=&apos;,&apos;)</span><br><span class="line"></span><br><span class="line">    edge_csvfile = open(&quot;relationship.csv&quot;, &quot;w&quot;, newline=&apos;&apos;, encoding=&quot;utf-8&quot;)</span><br><span class="line">    edge_writer = csv.writer(edge_csvfile, delimiter=&apos;,&apos;)</span><br><span class="line"></span><br><span class="line">    with codecs.open(path + &quot;.txt&quot;, &quot;r&quot;, &quot;utf-8&quot;) as file:</span><br><span class="line"></span><br><span class="line">        data, relationship = &#123;&#125;, &#123;&#125;</span><br><span class="line">        properties, relation_types = [], []</span><br><span class="line">        tags = [&apos;:START_ID&apos;, &apos;:END_ID&apos;, &apos;:TYPE&apos;]</span><br><span class="line">        edge_writer.writerow(tags)</span><br><span class="line">        data_to_csv_flag, rel_keys_write_flag = True, True</span><br><span class="line"></span><br><span class="line">        for line in file:</span><br><span class="line">            dict = json.loads(line[0: -1])</span><br><span class="line">            nodes, edges = dict[&apos;nodes&apos;], dict[&apos;edges&apos;]</span><br><span class="line">            &apos;&apos;&apos;</span><br><span class="line">            # 获取属性列表</span><br><span class="line">            for node in nodes:</span><br><span class="line">                for key, value in node.items():</span><br><span class="line">                    if key not in properties: properties.append(key)</span><br><span class="line">                # 为属性赋值</span><br><span class="line">                for pro in properties:</span><br><span class="line">                    if pro in node.keys(): data[pro] = node[pro]</span><br><span class="line">                    else: data[pro] = &quot;&quot;</span><br><span class="line">            # node 节点写入 csv 文件</span><br><span class="line">            if data_to_csv_flag == True:</span><br><span class="line">                writer.writerow(data.keys())</span><br><span class="line">            writer.writerow(data.values())</span><br><span class="line">            data_to_csv_flag = False</span><br><span class="line">            &apos;&apos;&apos;</span><br><span class="line"></span><br><span class="line">            # 获取属性列表</span><br><span class="line">            for node in nodes:</span><br><span class="line">                for key, value in node.items():</span><br><span class="line">                    if key not in properties: properties.append(key)</span><br><span class="line"></span><br><span class="line">            for node in nodes:</span><br><span class="line">                # 为属性赋值</span><br><span class="line">                for property in properties:</span><br><span class="line">                    if property in node:</span><br><span class="line">                        data[property] = node[property]</span><br><span class="line">                    else:</span><br><span class="line">                        data[property] = &quot;&quot;</span><br><span class="line">                # node 节点写入 csv 文件</span><br><span class="line">                if data_to_csv_flag == True:</span><br><span class="line">                    writer.writerow(data.keys())</span><br><span class="line">                writer.writerow(data.values())</span><br><span class="line">                data_to_csv_flag = False</span><br><span class="line"></span><br><span class="line">            # 获取关系列表</span><br><span class="line">            for edge in edges:</span><br><span class="line">                for key, value in edge.items():</span><br><span class="line">                    if key == &apos;label&apos; and value not in relation_types:</span><br><span class="line">                        relation_types.append(value)</span><br><span class="line">                    relationship[key] = edge[key]</span><br><span class="line">                # 逐行写入 edge 值</span><br><span class="line">                # if rel_keys_write_flag == True:</span><br><span class="line">                edge_writer.writerow(edge.values())</span><br><span class="line">            # rel_keys_write_flag = False</span><br><span class="line"></span><br><span class="line">        edge_csvfile.close()</span><br><span class="line">        nodes_csvfile.close()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &quot;__main__&quot;:</span><br><span class="line">    json2csv(&quot;./res0722&quot;)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>生成的csv文件，</strong> 样例如下：</p>
+</li>
+<li><p><strong>person_node.csv</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">:ID,key,name,alternateName,address,memberOf,foundingDate</span><br><span class="line">2c655f7ecfa9801ee7873a2d514d874a8f1eba1f,art_thing.person,许江,,,,</span><br><span class="line">12daf455786838f6211eef86419cfc7414f9c2cd,art_thing.person,林风眠,,,,</span><br><span class="line">a5f55c6ebcd59e745f89566ce644412adcddf694,art_thing.person,潘天寿,,,,</span><br><span class="line">26f155ab5d2312d65bb8c256927383f7e024e39d,art_thing.person,黄宾虹,,,,</span><br><span class="line">134b7075041bbfd49b96e0f968cfea2d908ccc77,art_thing.person,吴冠中,,,,</span><br><span class="line">cff3bfc23197965bb8e7960af6a117178913a074,art_thing.person,刘开渠,,,,</span><br><span class="line">87413f29bf9cc74b7f779cac73db9a4e88e495f7,art_thing.person,艾青,,,,</span><br><span class="line">2ebfc43ede2d7f873e8ed89b38e442917445afc7,art_thing.person,庹小新,,,,</span><br><span class="line">c57f9aa37ac355a2d87708919f84b908d57b034d,art_thing.person,蒋蕊泽,,,,</span><br><span class="line">bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06,art_thing.organization.educational_organization.college_or_university,中国美术学院,ChinaAcademyofArt,浙江省杭州市上城区南山路218号,浙江省,1928年</span><br><span class="line">5f7de140cbb1447cfd0f135a30968d0884e6673b,art_thing.person,徐悲鸿,,,,</span><br><span class="line">272e6a337573137f830eeb353f3ebc83d80154a0,art_thing.person,李苦禅,,,,</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>relationship.csv</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">:START_ID,:END_ID,:TYPE</span><br><span class="line">bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06,2c655f7ecfa9801ee7873a2d514d874a8f1eba1f,leader</span><br><span class="line">bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06,12daf455786838f6211eef86419cfc7414f9c2cd,alumni</span><br><span class="line">bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06,a5f55c6ebcd59e745f89566ce644412adcddf694,alumni</span><br><span class="line">bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06,26f155ab5d2312d65bb8c256927383f7e024e39d,alumni</span><br><span class="line">bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06,134b7075041bbfd49b96e0f968cfea2d908ccc77,alumni</span><br><span class="line">bc7b9c4fd1171b15d51bbd1b9a2ccccd6d292d06,cff3bfc23197965bb8e7960af6a117178913a074,alumni</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="3-下节内容重点介绍如何在-Docker-内的-Neo4j-中使用-Neo4j-admin-import-工具"><a href="#3-下节内容重点介绍如何在-Docker-内的-Neo4j-中使用-Neo4j-admin-import-工具" class="headerlink" title="3 下节内容重点介绍如何在 Docker 内的 Neo4j 中使用 Neo4j-admin import 工具"></a>3 下节内容重点介绍如何在 Docker 内的 Neo4j 中使用 Neo4j-admin import 工具</h4>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>Post author:</strong>
+    diaoyongxiang
+  </li>
+  <li class="post-copyright-link">
+    <strong>Post link:</strong>
+    <a href="https://diaoyongxiang.github.io/2018/07/28/Neo4j - JSON_to_CSV Format Transformation/" title="JSON_To_CSV Transformation">https://diaoyongxiang.github.io/2018/07/28/Neo4j - JSON_to_CSV Format Transformation/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice: </strong>
+    All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> unless stating additionally.
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/28/Distributed_computing/" rel="prev" title="Hadoop&Spark搭建与性能比较">
+                Hadoop&Spark搭建与性能比较 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/hm.jpg"
+                alt="diaoyongxiang" />
+            
+              <p class="site-author-name" itemprop="name">diaoyongxiang</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Neo4j-admin-import-amp-JSON-to-CSV-Transformation"><span class="nav-number">1.</span> <span class="nav-text">Neo4j-admin import &amp; JSON_to_CSV Transformation</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Neo4j-admin-import-格式说明"><span class="nav-number">1.1.</span> <span class="nav-text">1  Neo4j-admin import 格式说明</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-JSON-To-CSV-Python3-6-代码"><span class="nav-number">1.2.</span> <span class="nav-text">2 JSON_To_CSV (Python3.6) 代码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-下节内容重点介绍如何在-Docker-内的-Neo4j-中使用-Neo4j-admin-import-工具"><span class="nav-number">1.3.</span> <span class="nav-text">3 下节内容重点介绍如何在 Docker 内的 Neo4j 中使用 Neo4j-admin import 工具</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">diaoyongxiang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
