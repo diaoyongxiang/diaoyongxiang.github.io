@@ -5,7 +5,7 @@
   
 
 
-<html class="theme-next muse use-motion" lang="zh-CN">
+<html class="theme-next gemini use-motion" lang="zh-CN">
 <head>
   <meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -82,7 +82,7 @@
 <meta name="description" content="概要：本文工作主要是搭建Hadoop、Spark集群并分别运行词频统计,简单地比较二者的性能……1 基础环境1.1 硬件环境 集群内包含3个节点： master、node1、node2，节点之间采用公网连接，可以相互ping通   节点IP地址分布如下   三节点虚拟机系统 VMware Station Pro 14、CentOS 7 每个节点设置2G内存、磁盘空间25G    1.2 网络配置">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hadoop&amp;Spark搭建与性能比较">
-<meta property="og:url" content="https://diaoyongxiang.github.io/2018/07/28/2018-07-16-分布并行计算/index.html">
+<meta property="og:url" content="https://diaoyongxiang.github.io/2018/07/28/Distributed_computing/index.html">
 <meta property="og:site_name" content="B506_Studio">
 <meta property="og:description" content="概要：本文工作主要是搭建Hadoop、Spark集群并分别运行词频统计,简单地比较二者的性能……1 基础环境1.1 硬件环境 集群内包含3个节点： master、node1、node2，节点之间采用公网连接，可以相互ping通   节点IP地址分布如下   三节点虚拟机系统 VMware Station Pro 14、CentOS 7 每个节点设置2G内存、磁盘空间25G    1.2 网络配置">
 <meta property="og:locale" content="zh-CN">
@@ -107,7 +107,7 @@
 <meta property="og:image" content="https://diaoyongxiang.github.io/images/spark_jps.png">
 <meta property="og:image" content="https://diaoyongxiang.github.io/images/spark_web.png">
 <meta property="og:image" content="https://diaoyongxiang.github.io/images/spark_result.png">
-<meta property="og:updated_time" content="2018-07-29T03:04:33.175Z">
+<meta property="og:updated_time" content="2018-07-29T04:47:43.597Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Hadoop&amp;Spark搭建与性能比较">
 <meta name="twitter:description" content="概要：本文工作主要是搭建Hadoop、Spark集群并分别运行词频统计,简单地比较二者的性能……1 基础环境1.1 硬件环境 集群内包含3个节点： master、node1、node2，节点之间采用公网连接，可以相互ping通   节点IP地址分布如下   三节点虚拟机系统 VMware Station Pro 14、CentOS 7 每个节点设置2G内存、磁盘空间25G    1.2 网络配置">
@@ -119,7 +119,7 @@
   var NexT = window.NexT || {};
   var CONFIG = {
     root: '/',
-    scheme: 'Muse',
+    scheme: 'Gemini',
     version: '5.1.4',
     sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
     fancybox: true,
@@ -141,7 +141,7 @@
 
 
 
-  <link rel="canonical" href="https://diaoyongxiang.github.io/2018/07/28/2018-07-16-分布并行计算/"/>
+  <link rel="canonical" href="https://diaoyongxiang.github.io/2018/07/28/Distributed_computing/"/>
 
 
 
@@ -212,6 +212,16 @@
         </li>
       
         
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives/" rel="section">
             
@@ -254,7 +264,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://diaoyongxiang.github.io/2018/07/28/2018-07-16-分布并行计算/">
+    <link itemprop="mainEntityOfPage" href="https://diaoyongxiang.github.io/2018/07/28/Distributed_computing/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="diaoyongxiang">
@@ -306,8 +316,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/分布式计算/" itemprop="url" rel="index">
-                    <span itemprop="name">分布式计算</span>
+                  <a href="/categories/Distributed-Computing/" itemprop="url" rel="index">
+                    <span itemprop="name">Distributed Computing</span>
                   </a>
                 </span>
 
@@ -823,7 +833,7 @@
 
 
 
-  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
 
 
 
@@ -922,6 +932,13 @@
 
   
   
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
 
   
   <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
